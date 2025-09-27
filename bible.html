@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Trivia Game</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: #334155;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #0b224d;
+            margin-bottom: 20px;
+        }
+
+        #score-display {
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        #question-text {
+            font-size: 1.5rem;
+            font-weight: 400;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            background-color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .answers-grid {
+            display: grid;
+            gap: 15px;
+            grid-template-columns: 1fr;
+        }
+
+        .answer-button {
+            background-color: #6366f1;
+            color: #ffffff;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .answer-button:hover {
+            transform: translateY(-3px);
+            background-color: #4f46e5;
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4);
+        }
+        
+        .answer-button:active {
+            transform: translateY(0);
+        }
+
+        .correct {
+            background-color: #10b981;
+        }
+
+        .incorrect {
+            background-color: #ef4444;
+        }
+
+        #message-box {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.3s ease;
+        }
+
+        #message-box.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        #message-content {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+
+        #message-box.visible #message-content {
+            transform: scale(1);
+        }
+
+        #message-text {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #334155;
+            font-weight: 700;
+        }
+
+        #message-close {
+            background-color: #6366f1;
+            color: #ffffff;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        #message-close:hover {
+            background-color: #4f46e5;
+        }
+
+        @media (min-width: 768px) {
+            .answers-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1 class="game-title">Bible Trivia</h1>
+        <div id="score-display">Score: 0 / 0</div>
+        <div id="question-text"></div>
+        <div id="answers-container" class="answers-grid"></div>
+    </div>
+
+    <div id="message-box">
+        <div id="message-content">
+            <p id="message-text"></p>
+            <button id="message-close">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "In the book of Genesis, who was the mother of Isaac?",
+                correctAnswer: "Sarah",
+                incorrectAnswers: ["Rebekah", "Hagar", "Leah"]
+            },
+            {
+                question: "According to the book of Exodus, what sea did Moses part?",
+                correctAnswer: "Red Sea",
+                incorrectAnswers: ["Dead Sea", "Mediterranean Sea", "Sea of Galilee"]
+            },
+            {
+                question: "In the book of Judges, what woman killed Sisera with a tent stake?",
+                correctAnswer: "Jael",
+                incorrectAnswers: ["Deborah", "Delilah", "Ruth"]
+            },
+            {
+                question: "The book of Psalms is a collection of what?",
+                correctAnswer: "Songs and poems",
+                incorrectAnswers: ["Prophecies", "Letters", "Laws"]
+            },
+            {
+                question: "In the Gospel of John, how many days after Lazarus died did Jesus raise him from the dead?",
+                correctAnswer: "Four",
+                incorrectAnswers: ["Two", "Three", "Seven"]
+            },
+            {
+                question: "Which of these disciples was a tax collector before he followed Jesus?",
+                correctAnswer: "Matthew",
+                incorrectAnswers: ["Peter", "John", "Andrew"]
+            },
+            {
+                question: "In the book of Daniel, in what fiery furnace were Shadrach, Meshach, and Abednego thrown?",
+                correctAnswer: "A furnace seven times hotter",
+                incorrectAnswers: ["A pit of lions", "A pit of snakes", "A dark prison"]
+            },
+            {
+                question: "The first book of the New Testament is what?",
+                correctAnswer: "Matthew",
+                incorrectAnswers: ["Mark", "Luke", "John"]
+            },
+            {
+                question: "What did Jesus turn into wine at the wedding in Cana?",
+                correctAnswer: "Water",
+                incorrectAnswers: ["Milk", "Oil", "Honey"]
+            },
+            {
+                question: "Who was the first king of Israel?",
+                correctAnswer: "Saul",
+                incorrectAnswers: ["David", "Solomon", "Samuel"]
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        const questionTextElement = document.getElementById('question-text');
+        const answersContainer = document.getElementById('answers-container');
+        const scoreDisplay = document.getElementById('score-display');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+        const messageCloseButton = document.getElementById('message-close');
+
+        // Shuffles an array randomly.
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Displays the current question and shuffles the answers.
+        function showQuestion() {
+            if (currentQuestionIndex < questions.length) {
+                const currentQuestion = questions[currentQuestionIndex];
+                questionTextElement.innerText = currentQuestion.question;
+                answersContainer.innerHTML = '';
+                
+                const allAnswers = shuffle([
+                    currentQuestion.correctAnswer,
+                    ...currentQuestion.incorrectAnswers
+                ]);
+
+                allAnswers.forEach(answer => {
+                    const button = document.createElement('button');
+                    button.innerText = answer;
+                    button.classList.add('answer-button');
+                    button.addEventListener('click', () => checkAnswer(button, answer, currentQuestion.correctAnswer));
+                    answersContainer.appendChild(button);
+                });
+            } else {
+                endGame();
+            }
+            updateScoreDisplay();
+        }
+
+        // Checks if the selected answer is correct.
+        function checkAnswer(selectedButton, selectedAnswer, correctAnswer) {
+            const isCorrect = selectedAnswer === correctAnswer;
+            if (isCorrect) {
+                score++;
+                selectedButton.classList.add('correct');
+            } else {
+                selectedButton.classList.add('incorrect');
+                // Highlight the correct answer
+                Array.from(answersContainer.children).forEach(button => {
+                    if (button.innerText === correctAnswer) {
+                        button.classList.add('correct');
+                    }
+                });
+            }
+
+            // Disable all buttons after an answer is chosen
+            Array.from(answersContainer.children).forEach(button => {
+                button.disabled = true;
+            });
+
+            // Move to the next question after a short delay
+            setTimeout(() => {
+                currentQuestionIndex++;
+                showQuestion();
+            }, 1500);
+        }
+
+        // Updates the score display.
+        function updateScoreDisplay() {
+            scoreDisplay.innerText = `Score: ${score} / ${questions.length}`;
+        }
+
+        // Ends the game and shows the final score.
+        function endGame() {
+            messageText.innerText = `Game Over! Your final score is ${score} out of ${questions.length}.`;
+            showMessage();
+        }
+
+        // Shows the message box.
+        function showMessage() {
+            messageBox.classList.add('visible');
+        }
+
+        // Hides the message box.
+        function hideMessage() {
+            messageBox.classList.remove('visible');
+        }
+
+        // Starts or restarts the game.
+        function startGame() {
+            score = 0;
+            currentQuestionIndex = 0;
+            shuffle(questions); // Shuffle the questions at the beginning of the game
+            hideMessage();
+            showQuestion();
+        }
+
+        // Event listener for the close/restart button
+        messageCloseButton.addEventListener('click', startGame);
+
+        // Start the game when the page loads
+        window.onload = startGame;
+
+    </script>
+</body>
+</html>
